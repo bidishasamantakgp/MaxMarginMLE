@@ -52,17 +52,16 @@ loglikeModelSystem <- function(paramsList, arrivalsList, kArrayList, omega_0List
 	return ll + sum(slackVariables)
 }
 
-#Complete code
+#Complete code #Code checked
 #calculate the gradient of the function
 #sn = number of slack variables
 #n = number of hashtags
-
 eval_grad_objfnc <- function(sn, n, paramsList, arrivalsList, kArrayList, omega_0List, omegaList, epsilon){
 	grad_vector <- NULL
 	for (i in 1:n){
-  		grad_vector <- c(grad_vector,gradUtilityLambda(omegaList[i], omega_0List[i], kArray[i], 
-  			arrivalsList[i], epsilon, paramsList[2*i-1], paramsList[2*i]), gradUtilityBeta(omegaList[i], omega_0List[i], kArray[i], 
-  			arrivalsList[i], epsilon, paramsList[2*i-1], paramsList[2*i]))
+  		grad_vector <- c(grad_vector,gradUtilityLambda(omegaList[i], omega_0List[i], kArrayList[i], 
+  			arrivalsList[i], epsilon, paramsList[2*i-1], paramsList[2*i]), gradUtilityBeta(omegaList[i], 
+  			omega_0List[i], kArrayList[i], arrivalsList[i], epsilon, paramsList[2*i-1], paramsList[2*i]))
 	}
 	for (i in 1: sn){
 		grad_vector <- c(grad_vector, 1)
@@ -70,38 +69,38 @@ eval_grad_objfnc <- function(sn, n, paramsList, arrivalsList, kArrayList, omega_
 	return (grad_vector)
 }
 
-#Complete code
+#Complete code #Code Checked
 #calculate the contraints
-eval_constraints <- function( omega_0List, omegaList, kArrayList, arrivalsList, paramsList, n ) {
-	rankList <-parseRank()
+eval_constraints <- function( omega_0List, omegaList, kArrayList, arrivalsList, paramsList, n, rankList ) {
+	
 	contraints = NULL
 	slackList = tail(paramsList, -2*n)
 	for (i in 1:length(rankList)){
 		
-		id1 = rankList[i][1]
-		id2 = rankList[i][2]
+		id1 = rankList[[i]][[1]]
+		id2 = rankList[[i]][[2]]
 
-		ts = rankList[i][3]
-		te = rankList[i][4]
+		ts = rankList[[i]][[3]]
+		te = rankList[[i]][[4]]
 		
-		slack = rankList[i][5]
+		slack = rankList[[i]][[5]]
 
 		a1 = calculate_coef_lambda(epsilon, ts, te)
 		b1 = calculate_coef_beta(omegaList[id1], omega_0List[id1], kArrayList[id1], arrivalsList[id1], ts, te)
 		a2 = calculate_coef_lambda(epsilon, ts, te)
 		b2 = calculate_coef_beta(omegaList[id2], omega_0List[id2], kArrayList[id2], arrivalsList[id2], ts, te)
 
-		constraints = rbind(constriants,1 - slackList[slack] + a1 * paramsList[2*id1-1] + b1 * paramsList[2*id1] - 
+		constraints = rbind(constriants,(1 - slackList[slack] + a1 * paramsList[2*id1-1] + b1 * paramsList[2*id1] - 
 			a2 * paramsList[2*id2-1] - b2 * paramsList[2*id2])
 	}
 	return contraints
 }
 
 
-#Code complete
+#Code complete #Code checked
 #calculate the gradient of the contriant function
-# n = number of hashtag
-# sn = number of slack variables
+#n = number of hashtag
+#sn = number of slack variables
 eval_grad_contrains <-function(rules, n, sn){
 	gradchain = NULL
 	for (i in 1:rules){
@@ -155,9 +154,11 @@ rankfileName <- myArgs[2]
 
 parameters <- parseParams(fileName)
 rankconstraints <- parseRank(rankfileName)
+rankList <-parseRank(rankfileName)
 
-res0 <- nloptr( x0=c(1.234,5.678),eval_f=eval_grad_objfnc, eval_grad_f=eval_grad_f0, lb = c(-Inf,0), ub = c(Inf,Inf), 
+res0 <- nloptr( x0=x0 ,eval_f=eval_grad_objfnc, eval_grad_f=eval_grad_f0, 
 	eval_g_ineq = eval_g0, eval_jac_g_ineq = eval_jac_g0, opts = list("algorithm" = "NLOPT_LD_MMA", 
-	"print_level" = 2, "check_derivatives" = TRUE, "check_derivatives_print" = "all"), a = a, b = b )
+	"print_level" = 2, "check_derivatives" = TRUE, "check_derivatives_print" = "all"), arrivalsList = arrivalsList, 
+	kArrayList = kArrayList, omega_0List = omega_0List, omegaList = omegaList, epsilon = epsilon, n = n)
 
 writeFileName <- myArgs[2]
