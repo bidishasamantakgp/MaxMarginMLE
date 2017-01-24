@@ -14,14 +14,17 @@ parseParams <- function(fileName){
 	initialslist <- NULL
 
 	n <- length(linn)/7
+	print("n")
+	print(n)
 	for(i in 1:n){
 		karraylist[[i]] <- as.integer(unlist(strsplit(linn[7*(i-1)+1],",")))
 		arrivalslist[[i]] <- as.double(unlist(strsplit(linn[7*(i-1)+2],",")))
+		#karraylist[[i]]<-rep(c(1), each=length(arrivalslist[[i]]))
 		omegalist[[i]] <- as.double(linn[7*(i-1)+3])
 		omega_0list[[i]] <- as.double(linn[7*(i-1)+4])
 		alphalist[[i]] <- as.double(linn[7*(i-1)+5])
 		initialslist <- c(initialslist, as.double(unlist(strsplit(linn[7*(i-1)+6], ","))))
-		testsetlist[[i]] <- as.double(unlist(strsplit(linn[7*(i-1)+7],",")))
+		testsetlist[[i]] <- as.integer(unlist(strsplit(linn[7*(i-1)+7],",")))
 		
 	}
 	parameters <- list(k=karraylist, arrivals = arrivalslist, omega = omegalist, omega_0 = omega_0list, 
@@ -71,13 +74,14 @@ calculate_coef_beta <-function(omega, omega_0, k, arrivals, ts, te){
 	first_term <- 0
 	second_term <- 0
 	return_value <- 0
+	#k <- rep(c(1), each=n)
 	for(i in 1:length(arrivals)){
   		if(arrivals[i] < te ){
-  			first_term <- ((1 /(omega_0 + (omega / k[i]))) * (exp( -(omega_0 + (omega / k[i])) * (te - 
+  			first_term <- ((exp( -(omega_0 + (omega / k[i])) * (te - 
   				arrivals[i]))))
   		}
   		if(arrivals[i] < ts ){
-  			second_term <- ((1 /(omega_0 + (omega / k[i]))) * (exp( -(omega_0 + (omega / k[i])) * (ts - 
+  			second_term <- ((exp( -(omega_0 + (omega / k[i])) * (ts - 
   				arrivals[i]))))	
   		}
   		return_value <- return_value - (first_term - second_term)/(omega_0 + omega/k[i])
@@ -89,6 +93,7 @@ calculate_coef_beta <-function(omega, omega_0, k, arrivals, ts, te){
 #The gradient of likelihood function with respect to lambda
 gradUtilityLambda <- function(omega, omega_0, k, arrivals, epsilon, lambda_0, beta){
 	n <- length(arrivals)
+	#k <- rep(c(1), each=n)
 	first_term <- (exp(-epsilon * arrivals[n]) - exp(-epsilon * arrivals[1])) / epsilon
 
   	Ai <- c(0,sapply(2:n, function(z) {
@@ -96,18 +101,17 @@ gradUtilityLambda <- function(omega, omega_0, k, arrivals, epsilon, lambda_0, be
 		}))	
 	denom <- lambda_0 * exp(-epsilon*arrivals) + beta * Ai
   	second_term <- sum(exp(-epsilon*arrivals)/ denom)
-  	return(first_term + second_term)
+  	return(-first_term - second_term)
 } 
 
 #Code complete #Code checked
 #The gradient of likelihood function with respect to beta
 gradUtilityBeta <- function(omega, omega_0, k, arrivals, epsilon, lambda_0, beta){
 	n <- length(arrivals)
-
+	#k <- rep(c(1), each=n)
 	first_term <- 0
 	for(i in 1:length(k)){
-  	first_term <- first_term + (1 /(omega_0 + (omega / k[i]))) * (exp( -(omega_0 + (omega / k[i]))* 
-  			(arrivals[n] - arrivals[i])))
+  	first_term <- first_term +  (exp( -(omega_0 + (omega / k[i]))* (arrivals[n] - arrivals[i])) - 1)/(omega_0 + (omega / k[i]))
   	}
 	
 	numerator <- c(0,sapply(2:n, function(z) {
@@ -117,7 +121,23 @@ gradUtilityBeta <- function(omega, omega_0, k, arrivals, epsilon, lambda_0, beta
 	denominator <- (lambda_0 * exp(-epsilon*arrivals) + beta * numerator)
 	second_term <- sum(numerator / denominator)	
 	
-	return(first_term + second_term)
+	return(-first_term - second_term)
+}
+parseArgument<- function(initialList){
+	tokens <- as.double(unlist(strsplit(initialList,",")))
+	n = length(tokens) / 2
+	
+	omegalist <- list()
+	omega_0list<-list()
+	omegastruct <- list()
+
+	for(i in 1:n){
+		omegalist <- c(omegalist, tokens[1+(i-1)*2])
+		omega_0list <- c(omega_0list, tokens[2+(i-1)*2])
+	}
+	omegastruct <- list(omega = omegalist, omega_0 = omega_0list)
+	
+	return(omegastruct)
 }
 
 # Not required currently

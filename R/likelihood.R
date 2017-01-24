@@ -3,23 +3,24 @@
 #Using nlopt library
 #TRY 1
 
-library(R.matlab)
 library('nloptr')
 
 source('/home/bidisha/2017-hashtag-code/MaxMarginMLE/R/Utility.R')
+
+
 #Complete code #CHECKED
 #Likelihood for a single hashtag
 loglikModelIndividual <- function(lambda_0, beta, arrivals, k, omega_0, omega, epsilon) {
 
 	n <- length(arrivals)
-	
+	#k <- rep(c(1), each=n)
 	beta 		<- beta
 	lambda_0	<- lambda_0
 	epsilon 	<- epsilon
 	omega_0 	<- omega_0
 	omega   	<- omega
-	print(n)
-	print(epsilon)
+	#print(n)
+	#print(epsilon)
 	term_1 <- (lambda_0 / epsilon) * (exp(-epsilon * arrivals[n]) - exp(-epsilon * arrivals[1]))
 	term_2 <- 0
 	for(i in 1:length(k)){
@@ -96,19 +97,21 @@ eval_constraints <- function( paramsList, omega_0List, omegaList, kArrayList, ar
 		b2 = calculate_coef_beta(omegaList[[id2]], omega_0List[[id2]], kArrayList[[id2]], arrivalsList[[id2]], 
 			ts, te)
 
-		constraints = rbind(constraints,(1 - slackList[slack] + a1 * paramsList[2*id1-1] + b1 * paramsList[2*id1] - 
-			a2 * paramsList[2*id2-1] - b2 * paramsList[2*id2]))
+		constraints = rbind(constraints,( - slackList[slack] - a1 * paramsList[2*id1-1] - b1 * paramsList[2*id1] + 
+			a2 * paramsList[2*id2-1] + b2 * paramsList[2*id2]))
 	}
 	return(constraints)
 }
+
 
 
 #Code complete #Code checked
 #calculate the gradient of the contriant function
 #n = number of hashtag
 #sn = number of slack variables
-eval_grad_contrains <-function(paramsList, omega_0List, omegaList, kArrayList, arrivalsList, rankList, n, epsilon){
+eval_grad_constraints <-function(paramsList, omega_0List, omegaList, kArrayList, arrivalsList, rankList, n, epsilon){
 	gradchain = NULL
+	#gradmatrix <-list()
 	sn <- length(rankList)
 	for (i in 1:sn){
 		id1 = rankList[[i]][["id1"]]
@@ -132,7 +135,7 @@ eval_grad_contrains <-function(paramsList, omega_0List, omegaList, kArrayList, a
 
 		for (j in 1:n){
 			if (id1==j){
-				aList = c(aList, a1, b1)
+				aList = c(aList, -a1, -b1)
 			} 
 			else if(id2 == j){
 				aList = c(aList, a2, b2)
@@ -149,57 +152,61 @@ eval_grad_contrains <-function(paramsList, omega_0List, omegaList, kArrayList, a
 				slackList = c(slackList, 0)
 			}
 		}
+	#	gradmatrix[[i]] <- c(aList, slackList)
 		gradchain = rbind(gradchain, c(aList, slackList))
 	}
+	#return(chain=gradchain, matrix=gradmatrix)
 	return(gradchain)
+	#return(gradmatrix)
 }
 
-#main Block
+eval_grad_constraints1 <-function(omega_0List, omegaList, kArrayList, arrivalsList, rankList, n, epsilon){
+	gradchain = NULL
+	gradmatrix <-list()
+	sn <- length(rankList)
+	for (i in 1:sn){
+		id1 = rankList[[i]][["id1"]]
+		id2 = rankList[[i]][["id2"]]
 
-myArgs <- commandArgs(trailingOnly = TRUE)
-#Arrival File name
-fileName <- myArgs[1]
-#rankfilename
-rankfileName <- myArgs[2]
+		ts = rankList[[i]][["ts"]]
+		te = rankList[[i]][["te"]]
+		
+		slack = rankList[[i]][["slackid"]]
 
-parameters <- parseParams(fileName)
-#rankconstraints <- parseRank(rankfileName)
-rankList <-parseRank(rankfileName)
-epsilon<-0.00001
-sc <- length(rankList)
+		a1 = calculate_coef_lambda(epsilon, ts, te)
+		b1 = calculate_coef_beta(omegaList[[id1]], omega_0List[[id1]], kArrayList[[id1]], arrivalsList[[id1]], 
+			ts, te)
+		a2 = calculate_coef_lambda(epsilon, ts, te)
+		b2 = calculate_coef_beta(omegaList[[id2]], omega_0List[[id2]], kArrayList[[id2]], arrivalsList[[id2]], 
+			ts, te)
 
-x0 <- c(parameters[["initials"]], integer(sc))
+		aList = NULL
+		slackList = NULL
 
-#print("arrivals")
-#print(parameters[["arrivals"]])
+		for (j in 1:n){
+			if (id1==j){
+				aList = c(aList, a1, b1)
+			} 
+			else if(id2 == j){
+				aList = c(aList, -a2, -b2)
+			}
+			else{
+				aList = c(aList, 0, 0)
+			}
+		}
+		for (j in 1:sn){
+			if(slack == j){
+				slackList = c(slackList, 1)
+			}
+			else {
+				slackList = c(slackList, 0)
+			}
+		}
+		gradmatrix[[i]] <- c(aList, slackList)
+		gradchain = rbind(gradchain, c(aList, slackList))
+	}
+	#return(gradchain, gradmatrix)
+	return(gradmatrix)
+}
 
-#print("k")
-#print(parameters[["k"]])
-
-#print("omega")
-#print(parameters[["omega"]])
-
-#print("omega_0")
-#print(parameters[["omega_0"]])
-
-#'''
-#arlts <- parameters[["arrivals"]][[1]]
-#print(arlts)
-
-#print(rankList)
-#print(arlts[1:5])
-#print(arlts[1])
-
-res0 <- nloptr( x0=x0 ,eval_f=loglikeModelSystem, eval_grad_f=eval_grad_objfnc, 
-	eval_g_ineq = eval_constraints, eval_jac_g_ineq = eval_grad_contrains, 
-	opts = list("algorithm" = "NLOPT_LD_MMA", "print_level" = 2, "check_derivatives" = TRUE, 
-		"check_derivatives_print" = "all"),
-	 arrivalsList = parameters[["arrivals"]], kArrayList = parameters[["k"]], 
-	 omega_0List = parameters[["omega_0"]], omegaList = parameters[["omega"]], 
-	 epsilon = epsilon, n = parameters[["n"]], rankList=rankList )
-
-print(res0)
-
-#outputfile
-#writeFileName <- myArgs[3]
 
