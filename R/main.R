@@ -19,7 +19,7 @@ sc <- length(rankList)
 
 x0 <- c(parameters[["initials"]], rep(c(0.001),each=sc))
 lb <- c(rep(c(0), each=parameters[["n"]] * 2 +sc))
-ub <- c(rep(c(100),each=parameters[["n"]]*2),rep(c(1.01), each=sc))
+ub <- c(rep(c(100),each=parameters[["n"]]*2),rep(c(10), each=sc))
 
 n <- c(parameters[["n"]])
 alphaList <- parameters[["alpha"]]

@@ -3,25 +3,17 @@ now=$(date)
 echo "$now"
 
 omega=('0.01' '0.02' '0.03' '0.04' '0.05' '0.06' '0.07' '0.08' '0.09' '0.095')
-
-#Rscript likelihood.R /home/bidisha/2017-hashtag-code/Data/hashtags/output/0.txt 
-#/home/bidisha/2017-hashtag-code/Data/hashtags/output/rank0.txt 
-#/home/bidisha/2017-hashtag-code/Data/hashtags/output/0name.txt 
-#/home/bidisha/2017-hashtag-code/Data/hashtags/outputMat/
 array=('0.05' '0.05' '0.05' '0.05' '0.05' '0.05' '0.05' '0.05' '0.05' '0.05')
 
 for((x=1; x <= 5 ; x++))
 do 
 	for i in "${omega[@]}"
 	do
-	#f='../data/ICC/80/ICCWT20.mat' 
-	
   		for j in "${omega[@]}"
     		do {
     			array[2*$x - 1]=$i
     			array[2*$x]=$j
 
-    			#foo=('foo bar' 'foo baz' 'bar baz')
 			params=$(printf ",%s" "${array[@]}")
 			params=${params:1}
 

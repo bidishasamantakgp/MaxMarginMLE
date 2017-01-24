@@ -7,11 +7,6 @@ getinitials<-function(constraintslist,nc,sc){
 	r <- length(rankList)
 	for(i in 1:sc){
 		constraint <- NULL
-		#for(j in 1:vc){
-		#	constraint <- c(constraint, constraintslist[i+(j-1)*r])
-		#}
-		#print(constraint)
-		#add.constraint(lps.model, constraint, "<=", -1)
 		add.constraint(lps.model, constraintslist[[i]], ">=", 1)
 	}
 
@@ -28,8 +23,8 @@ getinitials<-function(constraintslist,nc,sc){
 	for(i in (nc+1):vc){
 		sl <- rep(c(0), each=vc)
 		sl[i] = 1
-		add.constraint(lps.model, sl, "<",0.9999999)
-		add.constraint(lps.model, sl, ">=",0.00000001)
+		#add.constraint(lps.model, sl, "<",0.9999999)
+		add.constraint(lps.model, sl, ">=",0.00001)
 	}
 	#add.constraint(lps.model, sl, ">=",1)
 	# set objective function (default: find minimum)

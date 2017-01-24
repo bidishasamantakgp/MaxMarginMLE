@@ -97,7 +97,7 @@ eval_constraints <- function( paramsList, omega_0List, omegaList, kArrayList, ar
 		b2 = calculate_coef_beta(omegaList[[id2]], omega_0List[[id2]], kArrayList[[id2]], arrivalsList[[id2]], 
 			ts, te)
 
-		constraints = rbind(constraints,( - slackList[slack] - a1 * paramsList[2*id1-1] - b1 * paramsList[2*id1] + 
+		constraints = rbind(constraints,(1 - slackList[slack] - a1 * paramsList[2*id1-1] - b1 * paramsList[2*id1] + 
 			a2 * paramsList[2*id2-1] + b2 * paramsList[2*id2]))
 	}
 	return(constraints)
