@@ -19,7 +19,7 @@ sc <- length(rankList)
 
 x0 <- c(parameters[["initials"]], rep(c(0.001),each=sc))
 lb <- c(rep(c(0), each=parameters[["n"]] * 2 +sc))
-ub <- c(rep(c(100),each=parameters[["n"]]*2),rep(c(10), each=sc))
+ub <- c(rep(c(200),each=parameters[["n"]]*2),rep(c(10), each=sc))
 
 n <- c(parameters[["n"]])
 alphaList <- parameters[["alpha"]]
@@ -41,19 +41,19 @@ x0<-getinitials(m, 2*n, length(rankList))
 print(x0)
 
 
-res0 <- nloptr( x0=x0 ,eval_f=loglikeModelSystem, eval_grad_f=eval_grad_objfnc,lb = lb,ub = ub,
-	eval_g_ineq = eval_constraints, eval_jac_g_ineq = eval_grad_constraints, 
-	opts = list("algorithm" = "NLOPT_LD_MMA", "print_level" = 2, "check_derivatives" = TRUE, 
-	"check_derivatives_print" = "all","maxeval"=100),arrivalsList = parameters[["arrivals"]], 
-	kArrayList = parameters[["k"]], omega_0List = omega_0List, omegaList = omegaList, epsilon = epsilon, 
-	n = parameters[["n"]], rankList=rankList)
+# res0 <- nloptr( x0=x0 ,eval_f=loglikeModelSystem, eval_grad_f=eval_grad_objfnc,lb = lb,ub = ub,
+#  	eval_g_ineq = eval_constraints, eval_jac_g_ineq = eval_grad_constraints, 
+#  	opts = list("algorithm" = "NLOPT_LD_MMA", "print_level" = 2, "check_derivatives" = TRUE, 
+#  	"check_derivatives_print" = "all","maxeval"=100),arrivalsList = parameters[["arrivals"]], 
+#  	kArrayList = parameters[["k"]], omega_0List = omega_0List, omegaList = omegaList, epsilon = epsilon, 
+#  	n = parameters[["n"]], rankList=rankList)
 
-#res0 <- nloptr( x0=x0 ,eval_f=loglikeModelSystem, lb = lb,ub = ub,eval_g_ineq = eval_constraints, 
-#	opts = list("algorithm" = "NLOPT_LN_COBYLA", "print_level" = 2, "maxeval"=400),
-#	arrivalsList = parameters[["arrivals"]], kArrayList = parameters[["k"]], 
-#	omega_0List = omega_0List, omegaList = omegaList, epsilon = epsilon, n = parameters[["n"]], rankList=rankList)
+res0 <- nloptr( x0=x0 ,eval_f=loglikeModelSystem, lb = lb,ub = ub,eval_g_ineq = eval_constraints, 
+	opts = list("algorithm" = "NLOPT_LN_COBYLA", "print_level" = 2),
+	arrivalsList = parameters[["arrivals"]], kArrayList = parameters[["k"]], 
+	omega_0List = omega_0List, omegaList = omegaList, epsilon = epsilon, n = parameters[["n"]], rankList=rankList)
 
-#print(res0)
+print(res0)
 
 solution <- res0$solution
 print(solution)

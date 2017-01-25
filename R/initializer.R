@@ -16,6 +16,7 @@ getinitials<-function(constraintslist,nc,sc){
 		sl <- rep(c(0), each=vc)
 		sl[i] = 1
 		add.constraint(lps.model, sl, ">",0.001)
+		#add.constraint(lps.model, sl, "<",200)
 	}
 
 	#lower and upper bound for slack variables
